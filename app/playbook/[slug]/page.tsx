@@ -1,5 +1,6 @@
 "use client";
 
+import { use } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import {
@@ -16,8 +17,9 @@ const complexityBadge = {
   advanced: { text: "#DC2626", bg: "#FEF2F2" },
 };
 
-export default function PlaybookPage({ params }: { params: { slug: string } }) {
-  const pb = PLAYBOOKS.find(p => p.slug === params.slug);
+export default function PlaybookPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params);
+  const pb = PLAYBOOKS.find(p => p.slug === slug);
   if (!pb) notFound();
 
   const cat = CATEGORY_META[pb.category];

@@ -3,9 +3,7 @@ const nextConfig = {
   images: {
     domains: ["avatars.githubusercontent.com", "lh3.googleusercontent.com"],
   },
-  experimental: {
-    serverComponentsExternalPackages: ["@prisma/client", "prisma"],
-  },
+  serverExternalPackages: ["@prisma/client", "prisma"],
 };
 
 module.exports = nextConfig;
