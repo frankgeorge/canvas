@@ -1,0 +1,271 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Auth ────────────────────────────────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String       @id @default(cuid())
+  name          String?
+  email         String?      @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  accounts      Account[]
+  sessions      Session[]
+  orgMembers    OrgMember[]
+  workflows     Workflow[]
+  playbookStars PlaybookStar[]
+  playbookClones PlaybookClone[]
+  apiKeys       ApiKey[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Organisations ───────────────────────────────────────────────────────────
+
+model Organisation {
+  id        String      @id @default(cuid())
+  name      String
+  slug      String      @unique
+  plan      OrgPlan     @default(STARTER)
+  logoUrl   String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  members   OrgMember[]
+  workflows Workflow[]
+  apiKeys   ApiKey[]
+  usage     OrgUsage[]
+}
+
+enum OrgPlan {
+  STARTER
+  GROWTH
+  ENTERPRISE
+}
+
+model OrgMember {
+  id     String   @id @default(cuid())
+  role   OrgRole  @default(MEMBER)
+  org    Organisation @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  orgId  String
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  joinedAt DateTime @default(now())
+
+  @@unique([orgId, userId])
+}
+
+enum OrgRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+// ─── Workflows ───────────────────────────────────────────────────────────────
+
+model Workflow {
+  id          String         @id @default(cuid())
+  title       String
+  description String?        @db.Text
+  status      WorkflowStatus @default(DRAFT)
+  nodes       Json           @default("[]")
+  edges       Json           @default("[]")
+  config      Json           @default("{}")
+  playbookId  String?
+  userId      String
+  orgId       String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  lastRunAt   DateTime?
+  runCount    Int            @default(0)
+
+  user        User           @relation(fields: [userId], references: [id])
+  org         Organisation?  @relation(fields: [orgId], references: [id])
+  runs        WorkflowRun[]
+
+  @@index([userId])
+  @@index([orgId])
+  @@index([status])
+}
+
+enum WorkflowStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  ERROR
+  ARCHIVED
+}
+
+model WorkflowRun {
+  id          String      @id @default(cuid())
+  workflowId  String
+  status      RunStatus
+  startedAt   DateTime    @default(now())
+  completedAt DateTime?
+  durationMs  Int?
+  inputData   Json?
+  outputData  Json?
+  error       String?     @db.Text
+  logs        Json        @default("[]")
+  tokenUsage  Int         @default(0)
+  costUsd     Float       @default(0)
+  workflow    Workflow    @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@index([workflowId])
+  @@index([status])
+  @@index([startedAt])
+}
+
+enum RunStatus {
+  QUEUED
+  RUNNING
+  SUCCESS
+  FAILED
+  CANCELLED
+}
+
+// ─── Playbooks ───────────────────────────────────────────────────────────────
+
+model Playbook {
+  id                  String            @id @default(cuid())
+  slug                String            @unique
+  title               String
+  description         String            @db.Text
+  longDescription     String?           @db.Text
+  category            String
+  complexity          PlaybookComplexity @default(STANDARD)
+  authorName          String
+  authorOrg           String?
+  authorVerified      Boolean           @default(false)
+  tags                String[]
+  agentCount          Int               @default(1)
+  stepCount           Int               @default(1)
+  avgRuntime          String            @default("~1 min")
+  timeSaved           String            @default("1 hr/week")
+  runCount            Int               @default(0)
+  starCount           Int               @default(0)
+  cloneCount          Int               @default(0)
+  nodes               Json              @default("[]")
+  outcomes            String[]
+  requiredIntegrations String[]
+  featured            Boolean           @default(false)
+  isPremium           Boolean           @default(false)
+  publishedAt         DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  stars               PlaybookStar[]
+  clones              PlaybookClone[]
+
+  @@index([category])
+  @@index([featured])
+  @@index([isPremium])
+}
+
+enum PlaybookComplexity {
+  STARTER
+  STANDARD
+  ADVANCED
+}
+
+model PlaybookStar {
+  id         String   @id @default(cuid())
+  playbookId String
+  userId     String
+  createdAt  DateTime @default(now())
+  playbook   Playbook @relation(fields: [playbookId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([playbookId, userId])
+}
+
+model PlaybookClone {
+  id         String   @id @default(cuid())
+  playbookId String
+  userId     String
+  workflowId String?
+  createdAt  DateTime @default(now())
+  playbook   Playbook @relation(fields: [playbookId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([playbookId])
+  @@index([userId])
+}
+
+// ─── API Keys ─────────────────────────────────────────────────────────────────
+
+model ApiKey {
+  id          String       @id @default(cuid())
+  name        String
+  keyHash     String       @unique
+  keyPrefix   String       // e.g. "sfr_live_..."
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime     @default(now())
+  userId      String
+  orgId       String?
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org         Organisation? @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([orgId])
+}
+
+// ─── Usage / billing tracking ────────────────────────────────────────────────
+
+model OrgUsage {
+  id        String       @id @default(cuid())
+  orgId     String
+  month     String       // "2025-02" format
+  runCount  Int          @default(0)
+  tokenCount Int         @default(0)
+  costUsd   Float        @default(0)
+  org       Organisation @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, month])
+  @@index([orgId])
+}

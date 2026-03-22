@@ -1,0 +1,135 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,300;1,9..144,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-fraunces: 'Fraunces', serif;
+  --font-plus-jakarta: 'Plus Jakarta Sans', sans-serif;
+  --font-jetbrains: 'JetBrains Mono', monospace;
+
+  --background: 40 20% 98%;
+  --foreground: 60 5% 5%;
+  --card: 40 15% 97%;
+  --card-foreground: 60 5% 5%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 60 5% 5%;
+  --primary: 38 90% 40%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 40 15% 93%;
+  --secondary-foreground: 60 5% 15%;
+  --muted: 40 15% 93%;
+  --muted-foreground: 60 5% 40%;
+  --accent: 40 15% 93%;
+  --accent-foreground: 60 5% 15%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 40 15% 88%;
+  --input: 40 15% 88%;
+  --ring: 38 90% 40%;
+  --radius: 0.625rem;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: #FAFAF8;
+  color: #0D0D0B;
+  font-family: var(--font-plus-jakarta);
+  line-height: 1.6;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F4F2EC;
+}
+::-webkit-scrollbar-thumb {
+  background: #D0CEC6;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #B0AEA6;
+}
+
+/* Grain overlay texture */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* React Flow overrides */
+.react-flow__background {
+  background-color: #F4F2EC !important;
+}
+.react-flow__edge-path {
+  stroke: #D97706 !important;
+  stroke-width: 1.5;
+}
+.react-flow__handle {
+  background: #D97706 !important;
+  border-color: #FAFAF8 !important;
+  width: 10px !important;
+  height: 10px !important;
+}
+.react-flow__controls {
+  box-shadow: 0 1px 3px rgba(13,13,11,0.1) !important;
+  border: 1px solid #EAE7DF !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+.react-flow__controls-button {
+  background: #FAFAF8 !important;
+  border-bottom-color: #EAE7DF !important;
+}
+.react-flow__controls-button svg {
+  fill: #4A4A45 !important;
+}
+.react-flow__minimap {
+  border: 1px solid #EAE7DF !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+/* Animation delays for stagger */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.10s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.20s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.30s; }
+
+/* Node types in Studio */
+.safyr-node {
+  background: white;
+  border: 1.5px solid #EAE7DF;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(13,13,11,0.06);
+  transition: all 0.15s ease;
+}
+.safyr-node:hover, .safyr-node.selected {
+  border-color: #D97706;
+  box-shadow: 0 0 0 3px rgba(217,119,6,0.12);
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
